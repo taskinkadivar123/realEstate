@@ -32,6 +32,8 @@ Dragon Real Estate wants to automate price prediction to identify undervalued pr
 | B         | Proportion of Black residents |
 | LSTAT     | % of low-income residents |
 | MEDV      | Median value of owner-occupied homes |
+
+
 **This same dataset more clear i understand in the project which is natural way understand so there check it(ML_project.py)**
 
 ## 🧪 Workflow
