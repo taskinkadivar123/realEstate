@@ -123,16 +123,57 @@ print(f"Rows in train set: {len(train_set)} \nRows in test set: {len(test_set)}\
 # You don’t want:
 # Rows from the same patient to appear in both train and test (leakage)
 # But you also want each fold to have the same proportion of diseased vs. healthy patients (stratification)
-from sklearn.model_selection import StratifiedGroupKFold
 
-# Replace 'GROUP_COLUMN' with the actual column in your DataFrame
-group_column = 'GROUP_COLUMN'  # <-- change this to the real column name
-
-splitter = StratifiedGroupKFold(n_splits=2, shuffle=True)
-
-for train_index, test_index in splitter.split(housing, housing['CHAS'], groups=housing[group_column]):
-    strat_train_set = housing.loc[train_index]
+from sklearn.model_selection import StratifiedShuffleSplit
+split = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+for train_index, test_index in split.split(housing, housing['CHAS']): # Verifies if the split preserved the ratio of 0s and 1s in CHAS.
+    strat_train_set = housing.loc[train_index] # Selects actual rows from the DataFrame using those indices.
     strat_test_set = housing.loc[test_index]
-    break  # take the first fold
 
-print(strat_test_set)
+# print(strat_test_set)
+# print(strat_test_set.describe())
+# print(strat_test_set.info())
+# print(strat_test_set['CHAS'].value_counts())
+# print(strat_train_set['CHAS'].value_counts())
+
+# Looking for Correlations
+# Correlation refers to a statistical relationship or connection between two or more variables. It tells you whether — and how strongly — changes in one variable are associated with changes in another.
+# r = ∑(xi-(mean of x))(yi−(mean of y))/ squere root of (∑(xi−(mean of x))) squere root of (∑(yi−(mean of y)))
+# or 
+# r= Cov(X,Y)/σX.σY
+# Cov(X, Y) = covariance of X and Y
+# 𝜎𝑋σ𝑌 = standard deviations of X and Y
+corr_metrix = housing.corr()
+a = corr_metrix['MEDV'].sort_values(ascending=False) 
+# print(a) # here if MEDV then after RM beacuse MEDV increse (1) so RM(room) are increase. it is correlation with eachothers.add()
+# plt.show()
+
+import matplotlib.pyplot as plt
+from pandas.plotting import scatter_matrix
+# scatter_matrix() creates the figure, but does not automatically display it in some environments (like scripts or some IDEs).
+attributes = ["MEDV", "RM", "ZN", "LSTAT"]
+scatter_matrix(housing[attributes], figsize=(12, 8))
+plt.show()  
+# Here Purpose of Comparing These Pairs:
+# 1. MEDV vs. RM
+# You're checking if more rooms = higher house price (MEDV).
+# Usually shows a positive correlation — more rooms, higher value.
+# 2. MEDV vs. LSTAT
+# You're seeing if a higher % of low-income population = lower house prices.
+# Usually shows a negative correlation — more LSTAT, lower MEDV.
+# 3. MEDV vs. ZN
+# You're checking if homes in low-density, residential zones are more valuable.
+# May or may not show a clear trend — depends on your data.
+
+housing.plot(kind="scatter", x="RM", y="MEDV", alpha=1)
+# ahi hu outlier nikadi apis and ML pattern pn saru mdse so prediction pan sachu mdse jem k RM = 5 pase MEDV = 50 chh and RM = 9 pase rpan MEDV = 50 chh je outlier chh 
+plt.show()
+
+
+# Trying Out Attribute Combinations:
+housing["TAXRM"] = housing['TAX']/housing['RM']
+print(housing["TAXRM"])
+# Correlations
+corr_metrix = housing.corr()
+a = corr_metrix['MEDV'].sort_values(ascending=False) 
+print(a) # ahi TAXRM name nu new varible add thai jse for TAXRM
