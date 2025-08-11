@@ -136,6 +136,8 @@ for train_index, test_index in split.split(housing, housing['CHAS']): # Verifies
 # print(strat_test_set['CHAS'].value_counts())
 # print(strat_train_set['CHAS'].value_counts())
 
+housing = strat_train_set.copy()
+
 # Looking for Correlations
 # Correlation refers to a statistical relationship or connection between two or more variables. It tells you whether — and how strongly — changes in one variable are associated with changes in another.
 # r = ∑(xi-(mean of x))(yi−(mean of y))/ squere root of (∑(xi−(mean of x))) squere root of (∑(yi−(mean of y)))
@@ -153,7 +155,7 @@ from pandas.plotting import scatter_matrix
 # scatter_matrix() creates the figure, but does not automatically display it in some environments (like scripts or some IDEs).
 attributes = ["MEDV", "RM", "ZN", "LSTAT"]
 scatter_matrix(housing[attributes], figsize=(12, 8))
-plt.show()  
+# plt.show()  
 # Here Purpose of Comparing These Pairs:
 # 1. MEDV vs. RM
 # You're checking if more rooms = higher house price (MEDV).
@@ -166,9 +168,8 @@ plt.show()
 # May or may not show a clear trend — depends on your data.
 
 housing.plot(kind="scatter", x="RM", y="MEDV", alpha=1)
-# ahi hu outlier nikadi apis and ML pattern pn saru mdse so prediction pan sachu mdse jem k RM = 5 pase MEDV = 50 chh and RM = 9 pase rpan MEDV = 50 chh je outlier chh 
-plt.show()
-
+# plt.show()
+# # ahi hu outlier nikadi apis and ML pattern pn saru mdse so prediction pan sachu mdse jem k RM = 5 pase MEDV = 50 chh and RM = 9 pase rpan MEDV = 50 chh je outlier chh 
 
 # Trying Out Attribute Combinations:
 housing["TAXRM"] = housing['TAX']/housing['RM']
@@ -177,3 +178,97 @@ print(housing["TAXRM"])
 corr_metrix = housing.corr()
 a = corr_metrix['MEDV'].sort_values(ascending=False) 
 print(a) # ahi TAXRM name nu new varible add thai jse for TAXRM
+# plot it
+# housing.plot(kind="scatter",x="TAXRM",y="MEDV",alpha = 0.8)
+
+housing = strat_train_set.drop("MEDV",axis=1)
+housing_labels = strat_train_set["MEDV"].copy()
+
+# Missing Attribute -> here i miss data in RM columan so we check how it work here 3 option is best for set value still we try all.
+# To take care of missing attributes, you have three options:
+# Option 1. Get rid of the missing data points.
+# Oprion 2. Get rid the whole attributes.
+# Option 3.Set the value to some value (0, mean or median)
+
+# a = housing.dropna(subset=["RM"]) # Option-1
+# print(a.shape) # the original housing dataframe will remain unchanged
+
+# b = housing.drop("RM",axis=1).shape # Option 2
+# print(b) 
+
+median = housing["RM"].median() # Option 3
+print(median)
+c = housing["RM"].fillna(median)
+print(c)
+print(housing.describe())
+# ✅ What is SimpleImputer?
+# SimpleImputer is a tool from Scikit-Learn that automatically fills in (imputes) missing values in a dataset using a strategy you choose — like: mean,median,most_frequent,constant
+from sklearn.impute import SimpleImputer 
+imputer = SimpleImputer(strategy = "median")
+imputer.fit(housing)
+# Here get value for all column like RM,MEDV etc 
+d = imputer.statistics_ 
+print(d)
+X = imputer.transform(housing)
+housing_tr = pd.DataFrame(X,columns=housing.columns)
+print(housing_tr.describe())
+
+# Scikit-learn Design 
+# Primarily , three type of object:
+# 1. Estimators - it estimates some parameters based on dataset. eg.imputer it has fit method and transform method. fit method - Fits the dataset and calculates iternal perameter.
+# These are any objects that learn from data.
+# They usually have:
+# .fit() method → to learn from the data
+# Sometimes also .transform() or .predict()
+# 2. Transformers - transform takes input and returns output based on the learing from fit(). it also has a convenience function called fit_transform() which fits and then transforms.
+# These take what was learned in .fit() and apply it to the data using .transform().
+# They can also use .fit_transform() to do both steps in one.
+# ✅ Transformers are a type of estimator that has .transform() — like StandardScaler, SimpleImputer, etc.
+# 3. Predictors - LinearRegression model is  an example of predictor . fit() and predict() are two common function.it also gives score function which will evalute the predicitons.
+# These are machine learning models.
+# They take input features, learn from them, and make predictions.
+# They use:
+# .fit(X, y) → to train the model
+# .predict(X) → to make predictions
+# .score(X, y) → to evaluate performance
+
+# Feature Scaling
+# two types of feature scaling methods:
+# 1. Min-Max scaling (normalization)
+#     (value - min)/(max-min)
+#     sklearn provides a class called MinMaxScaler for this
+# 2. Standardizatiom (Z-score)
+#     (value-mean)/std
+#     sklearn provides a class called StandardScaler for this 
+
+# Create Pipline
+# pipline:A pipeline in machine learning is a step-by-step workflow that automates the data preprocessing and model training process.
+# Think of it like a conveyor belt in a factory:
+# Raw materials (your raw data) go in,
+# They pass through machines (data cleaning, feature selection, model training),
+# And you get a finished product (a trained model or prediction).
+
+# 📦 What’s Inside a Pipeline?
+# A pipeline usually includes these steps:
+# Data Preprocessing
+# Handling missing values (SimpleImputer)
+# Scaling (StandardScaler, MinMaxScaler)
+# Encoding categorical variables (OneHotEncoder)
+# Feature Selection or Transformation (optional)
+# PCA, PolynomialFeatures, etc.
+# Model Training
+# A model like LinearRegression, RandomForestClassifier, etc.
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+my_pipeline = Pipeline([
+    ('imputer',SimpleImputer(strategy = "median")),   # .... add as many you want in your pipline
+    ('std_scaler',StandardScaler())
+])
+housing_num_tr = my_pipeline.fit_transform(housing)
+print(housing_num_tr)
+print(housing_num_tr.shape)
+
+# selecting a desired model for dragon real estates
+from sklearn.linear_model import LinearRegression
+model = LinearRegression()
+model.fit(housing_num_tr,housing_labels)
