@@ -51,6 +51,13 @@ Dragon Real Estate wants to automate price prediction to identify undervalued pr
 - **MEDV vs ZN** → Unclear correlation, may depend on area
 - **MEDV vs TAXRM** → Helps in detecting poor/high tax vs room ratio areas
 
+## 🏠 Housing Price Prediction – Preprocessing & Modeling
+- **Missing Values:** Handled using `SimpleImputer` (median strategy).  
+- **Scaling:** Standardized features with `StandardScaler`.  
+- **Pipeline:** Combined preprocessing steps into an automated `Pipeline`.  
+- **Model:** Trained a `LinearRegression` model on processed housing data.  
+
+
 ## 🛠️ Requirements
 - Python 3.x
 - `pandas`
