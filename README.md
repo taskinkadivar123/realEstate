@@ -56,7 +56,11 @@ Dragon Real Estate wants to automate price prediction to identify undervalued pr
 - **Scaling:** Standardized features with `StandardScaler`.  
 - **Pipeline:** Combined preprocessing steps into an automated `Pipeline`.  
 - **Model:** Trained a `LinearRegression` model on processed housing data.  
-
+- Implemented model evaluation using cross-validation (`cross_val_score`).
+- Compared DecisionTreeRegressor and LinearRegression performance:
+  - DecisionTreeRegressor: Mean RMSE ~ 4.01 (better on training data, but risk of overfitting)
+  - LinearRegression: Mean RMSE ~ 5.02 (more stable, less overfitting)
+- Saved trained model with `joblib` as `Dragon.joblib` for future predictions.
 
 ## 🛠️ Requirements
 - Python 3.x
