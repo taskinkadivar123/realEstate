@@ -270,5 +270,102 @@ print(housing_num_tr.shape)
 
 # selecting a desired model for dragon real estates
 from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+#  Create the model
+#  It's a good baseline model for regression problems.  
+#  Assumes a straight-line relationship between features and target (price).
 model = LinearRegression()
+# model = DecisionTreeRegressor() # after we see overfitting
+# housing_num_tr: your training data (numerical features of houses).
+# housing_labels: the actual house prices (target values).
+# .fit() → learns the relationship between features and target (creates the model's parameters)
 model.fit(housing_num_tr,housing_labels)
+# Prepare some sample data to test predictions manually
+# .iloc[:5] → select the first 5 rows of the housing DataFrame by position (integer index)
+# We take a small subset just to see how the model predicts for known values
+some_data = housing.iloc[:5]
+some_labels = housing_labels.iloc[:5]
+# Preprocess the sample data
+# We must transform the new data using the SAME pipeline used for training:
+# Fills missing values
+# Scales the features
+# This ensures our input format matches what the model was trained on
+# If we skip this step, the model may give wrong results or throw errors
+prepared_data = my_pipeline.transform(some_data)
+#  Make predictions:predict() → takes the prepared features and outputs predicted house prices
+a  = model.predict(prepared_data)
+print(a)
+print(some_labels)
+
+#Evaluating the model
+from sklearn.metrics import mean_squared_error
+# Predict prices for the entire training set
+# This helps us measure how well the model fits the training data
+housing_predictions = model.predict(housing_num_tr)
+# mean_squared_error → average of squared differences between actual and predicted prices
+# Squaring ensures positive errors and penalizes large mistakes more
+mse = mean_squared_error(housing_labels,housing_predictions)
+# Taking the square root brings error back to original units (e.g., lakhs)
+rmse = np.sqrt(mse)
+print(mse) # overfitting here in desicion tree
+
+# better evalution technique - Cross validation (here remove overfitting)
+# Performs cross-validation to test your model’s performance more reliably.
+# 1 2 3 4 5 6 7 8 9 10
+from sklearn.model_selection import cross_val_score
+# a) model : This is your ML model (e.g., LinearRegression() or any regression model you created earlier). Why pass it? cross_val_score will train and evaluate this model on different folds.
+# b) housing_num_tr:Your features (X) after preprocessing/transformation (e.g., scaling, encoding, etc.).
+# c) housing_labels:Your target values (y), e.g., house prices.
+# d) scoring="neg_mean_squared_error":In regression, we often measure error using MSE (Mean Squared Error).
+# Problem: In scikit-learn, higher scores are considered better. But MSE is a "loss" metric (lower is better), so sklearn returns the negative of MSE.
+# That’s why it’s "neg_mean_squared_error" — so the function still works with the “higher-is-better” logic. We later take -scores to get positive MSE.
+# cv=10 means 10-fold cross-validation: Split dataset into 10 parts. Train on 9 parts, test on 1 part.
+scores = cross_val_score(model, housing_num_tr,housing_labels,scoring="neg_mean_squared_error",cv=10)
+# scores → array of negative MSE values from cross-validation. scores → converts them back to positive MSE values.
+rmse_scores = np.sqrt(-scores)
+print(rmse_scores)
+
+def print_score(scores):
+    print("scores:",scores)
+    print("mean:",scores.mean())
+    print("STD:",scores.std())
+
+print(print_score(rmse_scores))
+
+# Desicion tree
+# mean: 4.013521050382086
+# STD: 0.7468147793966334
+
+# Linear Regression
+# mean: 5.028914500287415
+# STD: 1.0611970088620446
+
+from joblib import dump,load
+# dump(model,'Dragon.joblib')
+import os
+script_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(script_dir, "Dragon.joblib")
+dump(model, file_path)
+print("Saved to:", file_path)
+
+
+# 1. What is joblib?
+# joblib is a Python library used for saving and loading Python objects to a file.
+# It is especially good for large data objects (like NumPy arrays, Pandas DataFrames, or trained ML models) because it saves them in a compressed binary format that is fast to load.
+# In ML, after we train a model, we don’t want to train it again every time. So, we save it to disk using joblib and later load it instantly.
+# 📦 Think of it like putting your model into a zip file and storing it, so you can take it out later without retraining.
+
+# 2. What is dump()?
+# Meaning: Save the Python object (model) into a file.
+# model → your trained ML model object.
+# 'Dragon.joblib' → file name where the model will be saved.
+
+# Testing the model om test data
+X_test = strat_test_set.drop("MEDV",axis=1)
+Y_test = strat_test_set["MEDV"].copy()
+X_test_prepared = my_pipeline.transform(X_test)
+final_prediction = model.predict(X_test_prepared)
+final_mse = mean_squared_error(Y_test,final_prediction)
+final_rmse = np.sqrt(final_mse)
+print(final_rmse)
+print(final_prediction,list(Y_test))
